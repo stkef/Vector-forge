@@ -1,0 +1,24 @@
+# environments
+.venv/
+venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# data produced by running VectorForge or the benchmarks
+data/
+datasets/
+results/
+*.f32
+*.db
+*.db-wal
+*.db-shm
+*.npz
+wal.log
+checkpoint.json
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

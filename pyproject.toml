@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vectorforge"
+version = "0.1.0"
+description = "A small vector database built from scratch: flat, HNSW and IVF-PQ indexes, filtered search, WAL durability, honest benchmarks."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "numba>=0.60",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+langchain = ["langchain-core>=0.3"]
+bench = ["hnswlib>=0.8", "h5py>=3.10", "faiss-cpu>=1.8", "qdrant-client>=1.10", "matplotlib>=3.8"]
+dev = ["pytest>=8", "langchain-core>=0.3"]
+
+[project.scripts]
+vectorforge = "vectorforge.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["vectorforge*"]
+
+[tool.setuptools.package-data]
+vectorforge = ["server/static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
