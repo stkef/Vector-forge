@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VectorForge Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2323272a'/%3E%3Cpath d='M3 12 L7 7 L10 9 L13 4' stroke='%23c9a44c' stroke-width='1.8' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #23272a;         /* bidri: blackened alloy */
+  --panel: #2b3034;
+  --raise: #33393e;
+  --inlay: #aab2b9;      /* silver inlay: structure */
+  --line: rgba(170,178,185,.22);
+  --text: #e6e8ea;
+  --muted: #8d959c;
+  --brass: #c9a44c;      /* the query's own path, primary actions */
+  --brass-dim: rgba(201,164,76,.32);
+  --oxide: #c86a5f;      /* misses, tombstones, errors */
+  --font: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eceeef; --panel: #f7f8f8; --raise: #e2e5e7; --inlay: #59626a;
+    --line: rgba(60,68,75,.18); --text: #22272b; --muted: #5f676e;
+    --brass: #8e6e1e; --brass-dim: rgba(142,110,30,.28); --oxide: #a4473d;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eceeef; --panel: #f7f8f8; --raise: #e2e5e7; --inlay: #59626a;
+  --line: rgba(60,68,75,.18); --text: #22272b; --muted: #5f676e;
+  --brass: #8e6e1e; --brass-dim: rgba(142,110,30,.28); --oxide: #a4473d;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text); font: 15px/1.5 var(--font);
+  font-variant-numeric: tabular-nums; display: grid; grid-template-columns: 250px 1fr;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.rail { border-right: 1px solid var(--line); padding: 22px 16px; display: flex; flex-direction: column; gap: 18px; min-height: 100vh; }
+.mark { font-weight: 600; font-size: 20px; line-height: 1.15; }
+.mark small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
+.rail h2 { font-size: 13px; font-weight: 500; color: var(--muted); margin: 0 0 6px; }
+.cols { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.cols button {
+  width: 100%; text-align: left; background: none; border: 0; border-left: 2px solid transparent;
+  padding: 7px 10px; cursor: pointer; border-radius: 0 4px 4px 0;
+}
+.cols button:hover { background: var(--panel); }
+.cols button[aria-current="true"] { border-left-color: var(--brass); background: var(--panel); }
+.cols .n { display: block; font-weight: 500; }
+.cols .m { display: block; font-size: 13px; color: var(--muted); }
+.rail .foot { margin-top: auto; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 8px; }
+.linkish { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; }
+.linkish:hover { color: var(--text); }
+
+main { padding: 26px 34px 60px; min-width: 0; }
+.head h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -.01em; }
+.facts { display: flex; margin: 14px 0 22px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.facts div { padding: 9px 18px 9px 0; margin-right: 18px; }
+.facts div + div { border-left: 1px solid var(--line); padding-left: 18px; }
+.facts dt { font-size: 12.5px; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 500; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 22px; flex-wrap: wrap; }
+.tabs button { background: none; border: 0; padding: 8px 12px 10px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--brass); }
+.tabs button:hover { color: var(--text); }
+section[hidden] { display: none; }
+
+.row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+input[type=text], input[type=number], textarea, select {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; color: var(--text); min-width: 0;
+}
+input[type=number] { width: 92px; }
+textarea { width: 100%; min-height: 42px; resize: vertical; font-size: 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button { background: none; border: 0; padding: 7px 12px; cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--raise); color: var(--text); }
+.go { background: var(--brass); color: #1f1a0d; border: 0; border-radius: 4px; padding: 8px 16px; font-weight: 600; cursor: pointer; }
+:root[data-theme="light"] .go { color: #fff; }
+.go:hover { filter: brightness(1.08); }
+.go:disabled { opacity: .6; cursor: progress; }
+.quiet { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 7px 12px; cursor: pointer; }
+.quiet:hover { border-color: var(--inlay); }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); padding-bottom: 8px; }
+
+.plan { margin: 22px 0 14px; padding: 12px 16px; border-left: 2px solid var(--brass); background: var(--panel); border-radius: 0 4px 4px 0; }
+.plan b { font-weight: 600; }
+.plan p { margin: 2px 0 0; color: var(--muted); font-size: 14px; max-width: 75ch; }
+.stats { display: flex; gap: 26px; flex-wrap: wrap; margin: 10px 0 16px; }
+.stat .v { font-size: 22px; font-weight: 500; }
+.stat .l { font-size: 13px; color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font-weight: 500; color: var(--muted); padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); }
+td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; }
+td.payload { color: var(--muted); max-width: 520px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+tr.miss td:first-child { box-shadow: inset 2px 0 var(--oxide); padding-left: 8px; }
+.tablewrap { overflow-x: auto; }
+.err { color: var(--oxide); margin: 12px 0; }
+.note { color: var(--muted); font-size: 14px; max-width: 75ch; }
+.empty { padding: 40px 0; max-width: 60ch; }
+.empty h1 { font-size: 26px; font-weight: 600; margin: 0 0 8px; }
+code { background: var(--panel); padding: 1px 5px; border-radius: 3px; font-size: 13.5px; }
+
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 26px; margin-top: 18px; }
+@media (max-width: 1100px) { .mapgrid { grid-template-columns: 1fr; } }
+.map { width: 100%; height: auto; background: var(--panel); border-radius: 4px; display: block; }
+.map .pt { fill: var(--inlay); opacity: .38; }
+.map .exp { fill: var(--brass); opacity: .35; }
+.map .hop { fill: var(--brass); }
+.map .path { fill: none; stroke: var(--brass); stroke-width: 2; stroke-linejoin: round; }
+.map .found { fill: none; stroke: var(--text); stroke-width: 1.4; }
+.map .q { fill: var(--brass); stroke: var(--bg); stroke-width: 1.5; }
+.map .cent { fill: none; stroke: var(--inlay); opacity: .55; }
+.map .probe { fill: var(--brass); }
+.map .lbl { fill: var(--muted); font: 12px var(--font); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.side h3 { font-size: 14px; font-weight: 500; margin: 0 0 8px; }
+.bars { display: flex; flex-direction: column; gap: 4px; margin-bottom: 22px; }
+.bar { display: grid; grid-template-columns: 56px 1fr 64px; gap: 8px; align-items: center; font-size: 13px; }
+.bar .track { height: 8px; background: var(--raise); border-radius: 2px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--inlay); }
+.bar .c { text-align: right; color: var(--muted); }
+.hist { display: flex; align-items: flex-end; gap: 1px; height: 70px; margin-bottom: 4px; }
+.hist div { flex: 1; background: var(--inlay); opacity: .8; min-height: 1px; }
+.hops { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.hops li { display: grid; grid-template-columns: 54px 1fr auto; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.hops .d { color: var(--muted); }
+
+.chart { width: 100%; height: auto; background: var(--panel); border-radius: 4px; }
+.chart .grid { stroke: var(--line); }
+.chart .ax { fill: var(--muted); font: 12px var(--font); }
+
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  body { grid-template-columns: 1fr; }
+  .rail { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .rail .foot { margin-top: 0; flex-direction: row; flex-wrap: wrap; gap: 6px 16px; }
+  .facts div, .facts div + div { border-left: 0; padding-left: 0; }
+  main { padding: 20px 16px 50px; }
+}
+</style>
+</head>
+<body>
+<nav class="rail" aria-label="Collections">
+  <div class="mark">VectorForge<small>Studio</small></div>
+  <div>
+    <h2>Collections</h2>
+    <ul class="cols" id="cols"></ul>
+  </div>
+  <div class="foot">
+    <button class="linkish" id="benchLink">Benchmark results</button>
+    <button class="linkish" id="sampleBtn">Create a sample collection</button>
+    <button class="linkish" id="themeBtn">Switch to light theme</button>
+    <span id="ver"></span>
+  </div>
+</nav>
+
+<main id="main"></main>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = (n, d = 0) => n == null ? "–" : Number(n).toLocaleString(undefined, {maximumFractionDigits: d, minimumFractionDigits: d});
+const bytes = b => b == null ? "–" : b > 1e9 ? fmt(b / 1e9, 2) + " GB" : b > 1e6 ? fmt(b / 1e6, 1) + " MB" : b > 1e3 ? fmt(b / 1e3, 1) + " KB" : b + " B";
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `${r.status} ${r.statusText}`);
+  return data;
+}
+
+const state = {cols: [], cur: null, tab: "search", health: null, mode: "random"};
+
+function isDark() { return getComputedStyle(document.documentElement).colorScheme.includes("dark"); }
+function applyTheme(t) {
+  if (t) document.documentElement.dataset.theme = t;
+  $("#themeBtn").textContent = isDark() ? "Switch to light theme" : "Switch to dark theme";
+}
+$("#themeBtn").onclick = () => {
+  const next = isDark() ? "light" : "dark";
+  try { localStorage.setItem("vf-theme", next); } catch (e) {}
+  applyTheme(next);
+};
+try { applyTheme(localStorage.getItem("vf-theme")); } catch (e) { applyTheme(); }
+
+async function loadCols(select) {
+  state.cols = (await api("/collections")).collections;
+  $("#cols").innerHTML = state.cols.map(c => `
+    <li><button data-n="${esc(c.name)}" aria-current="${c.name === state.cur}">
+      <span class="n">${esc(c.name)}</span>
+      <span class="m">${fmt(c.points)} points, ${esc(c.index.type)}</span></button></li>`).join("")
+    || `<li class="note" style="padding:4px 0">None yet.</li>`;
+  $("#cols").querySelectorAll("button").forEach(b => b.onclick = () => openCol(b.dataset.n));
+  if (select) openCol(select);
+  else if (!state.cur && state.cols.length) openCol(state.cols[0].name);
+  else if (!state.cols.length) renderEmpty();
+}
+
+function renderEmpty() {
+  state.cur = null;
+  $("#main").innerHTML = `<div class="empty">
+    <h1>No collections yet</h1>
+    <p class="note">Create one from Python or the API, load text files with
+    <code>python -m vectorforge ingest docs --collection vf-docs</code>,
+    or make a small sample to explore: 5,000 clustered 32-d vectors with
+    <code>bucket</code>, <code>lang</code> and <code>year</code> fields to filter on.</p>
+    <p><button class="go" id="mk">Create a sample collection</button></p></div>`;
+  $("#mk").onclick = makeSample;
+}
+
+function info() { return state.cols.find(c => c.name === state.cur); }
+
+async function openCol(name) {
+  state.cur = name;
+  $("#cols").querySelectorAll("button").forEach(b => b.setAttribute("aria-current", b.dataset.n === name));
+  const c = info(), ix = c.index;
+  const kind = ix.type === "hnsw" ? `HNSW, M ${ix.M}`
+    : ix.type === "ivfpq" ? (ix.trained ? `IVF-PQ, ${fmt(ix.nlist)} lists, ${ix.m}-byte codes` : "IVF-PQ, not trained yet")
+    : "Flat (exact)";
+  const facts = [["Points", fmt(c.points)], ["Dimension", c.dim], ["Metric", c.metric], ["Index", kind],
+                 ["Index memory", bytes(ix.memory_bytes)], ["Holes", fmt(c.holes)]];
+  if (state.tab === "bench") state.tab = "search";
+  $("#main").innerHTML = `
+    <div class="head"><h1>${esc(name)}</h1></div>
+    <dl class="facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
+    <div class="tabs" role="tablist">
+      ${[["search", "Search"], ["graph", ix.type === "ivfpq" ? "Lists" : "Graph"], ["points", "Points"], ["durability", "Durability"]]
+        .map(([id, l]) => `<button role="tab" data-t="${id}" aria-selected="${state.tab === id}">${l}</button>`).join("")}
+    </div>
+    <section id="t-search"></section><section id="t-graph"></section>
+    <section id="t-points"></section><section id="t-durability"></section>`;
+  $("#main").querySelectorAll(".tabs button").forEach(b => b.onclick = () => showTab(b.dataset.t));
+  showTab(state.tab);
+}
+
+function showTab(t) {
+  state.tab = t;
+  $("#main").querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === t));
+  ["search", "graph", "points", "durability"].forEach(id => { const s = $("#t-" + id); if (s) s.hidden = id !== t; });
+  ({search: renderSearch, graph: renderGraph, points: () => renderPoints(), durability: renderDurability})[t]();
+}
+
+// --------------------------------------------------------------- search
+function renderSearch() {
+  const el = $("#t-search");
+  if (el.dataset.ready === state.cur + state.mode) return;
+  el.dataset.ready = state.cur + state.mode;
+  const c = info();
+  const hasText = state.health?.embedder && state.health.embedder.dim === c.dim;
+  const modes = [["random", "Random point"], ["id", "Point ID"], ...(hasText ? [["text", "Text"]] : []), ["vector", "Vector"]];
+  if (!modes.find(m => m[0] === state.mode)) state.mode = "random";
+  const knob = c.index.type === "hnsw" ? `<label class="f">ef<input type="number" id="ef" placeholder="${c.index.ef_search}"></label>`
+    : c.index.type === "ivfpq" ? `<label class="f">nprobe<input type="number" id="nprobe" placeholder="${c.index.nprobe}"></label>` : "";
+  const q = state.mode === "random" ? `<span class="note">Each run picks a stored point and searches for its neighbours.</span>`
+    : state.mode === "id" ? `<label class="f">Point ID<input type="number" id="qid" style="width:180px"></label>`
+    : state.mode === "text" ? `<label class="f" style="flex:1">Question, embedded with ${esc(state.health.embedder.name)}<input type="text" id="qtext" placeholder="How does the planner choose a strategy?"></label>`
+    : `<label class="f" style="flex:1">Vector, a JSON list of ${c.dim} numbers<textarea id="qvec"></textarea></label>`;
+  el.innerHTML = `
+    <div class="seg" role="group" aria-label="Query">${modes.map(([m, l]) =>
+      `<button data-m="${m}" aria-pressed="${state.mode === m}">${l}</button>`).join("")}</div>
+    <div class="row" style="margin-top:12px">${q}</div>
+    <div class="row" style="margin-top:12px">
+      <label class="f" style="flex:1;min-width:260px">Filter, JSON (optional)
+        <input type="text" id="filter" placeholder='{"lang": "te", "year": {"gt": 2024}}'></label>
+      <label class="f">k<input type="number" id="k" value="10" min="1"></label>
+      ${knob}
+      <label class="check"><input type="checkbox" id="exact"> Exact only</label>
+      <button class="go" id="run">Run search</button>
+    </div>
+    <div id="sout"></div>`;
+  el.querySelectorAll(".seg button").forEach(b => b.onclick = () => { state.mode = b.dataset.m; renderSearch(); });
+  $("#run").onclick = runSearch;
+  el.querySelectorAll("input").forEach(i => i.addEventListener("keydown", e => { if (e.key === "Enter") runSearch(); }));
+}
+
+function readFilter() {
+  const t = $("#filter")?.value.trim();
+  if (!t) return null;
+  try { return JSON.parse(t); } catch (e) { throw new Error('The filter isn\'t valid JSON. Example: {"lang": "te"}'); }
+}
+
+async function runSearch() {
+  const out = $("#sout");
+  try {
+    const body = {k: +$("#k").value || 10, filter: readFilter(), exact: $("#exact").checked, compare_exact: true};
+    if ($("#ef")?.value) body.ef = +$("#ef").value;
+    if ($("#nprobe")?.value) body.nprobe = +$("#nprobe").value;
+    if (state.mode === "random") body.random = true;
+    if (state.mode === "id") { if (!$("#qid").value) throw new Error("Enter a point ID."); body.query_id = +$("#qid").value; }
+    if (state.mode === "text") { if (!$("#qtext").value.trim()) throw new Error("Type a question."); body.text = $("#qtext").value; }
+    if (state.mode === "vector") { try { body.vector = JSON.parse($("#qvec").value); } catch (e) { throw new Error("The vector isn't valid JSON."); } }
+    const r = await api(`/collections/${encodeURIComponent(state.cur)}/search`, {method: "POST", body});
+    const p = r.plan, ex = r.exact, truth = new Set(ex.hits.map(h => h.id));
+    const label = {flat_scan: "Exact scan", subset_scan: "Exact scan of the matching points", hnsw: "HNSW graph search",
+                   ivfpq: "IVF-PQ search", empty: "Nothing to search"}[p.strategy] || p.strategy;
+    const params = Object.entries(p.params || {}).map(([k, v]) => `${k} ${v}`).join(", ");
+    const textMode = state.mode === "text";
+    out.innerHTML = `
+      <div class="plan"><b>${label}</b>${params ? `, ${esc(params)}` : ""}
+        <p>${esc(p.reason.charAt(0).toUpperCase() + p.reason.slice(1))}.${body.filter && !/filter keeps/.test(p.reason)
+          ? ` The filter keeps ${fmt(p.candidates)} of ${fmt(p.live)} points (${fmt(p.selectivity * 100, 2)}%).` : ""}</p></div>
+      <div class="stats">
+        ${r.query_id != null ? `<div class="stat"><div class="v">${r.query_id}</div><div class="l">query point</div></div>` : ""}
+        <div class="stat"><div class="v">${fmt(r.ms, 2)} ms</div><div class="l">this search</div></div>
+        <div class="stat"><div class="v">${fmt(ex.ms, 2)} ms</div><div class="l">brute force</div></div>
+        <div class="stat"><div class="v" style="color:${ex.recall < 1 ? "var(--oxide)" : "inherit"}">${fmt(ex.recall, 2)}</div><div class="l">recall@${body.k} vs exact</div></div>
+      </div>
+      ${r.hits.length ? `<div class="tablewrap"><table><thead><tr><th>Rank</th><th>ID</th><th class="num">${info().metric === "l2" ? "Distance" : "Similarity"}</th><th>${textMode ? "Text" : "Payload"}</th></tr></thead><tbody>
+        ${r.hits.map((h, i) => `<tr class="${truth.has(h.id) ? "" : "miss"}" title="${truth.has(h.id) ? "" : "Not in the exact top-k"}">
+          <td>${i + 1}</td><td>${h.id}</td><td class="num">${fmt(h.score, 4)}</td>
+          <td class="payload" ${textMode ? 'style="white-space:normal;max-width:70ch;color:var(--text)"' : ""}>${textMode && h.payload.text
+            ? esc(h.payload.text.slice(0, 420)) + (h.payload.source ? `<br><span class="note">${esc(h.payload.source)}</span>` : "")
+            : esc(JSON.stringify(h.payload))}</td></tr>`).join("")}</tbody></table></div>
+        ${ex.recall < 1 ? `<p class="note">Rows marked on the left are not in the exact top ${body.k}: that is the approximation at work.</p>` : ""}`
+        : `<p class="note">No points matched. Loosen the filter, or check the field names on the Points tab.</p>`}`;
+  } catch (e) { out.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+
+// ---------------------------------------------------------- graph / lists
+function renderGraph() {
+  const el = $("#t-graph"), c = info();
+  if (c.index.type === "flat") {
+    el.innerHTML = `<p class="note">This collection uses the flat index: every search compares the query with every point, so there is no structure to draw.</p>`;
+    return;
+  }
+  if (el.dataset.ready === state.cur) return;
+  el.dataset.ready = state.cur;
+  const hnsw = c.index.type === "hnsw";
+  el.innerHTML = `
+    <p class="note">${hnsw
+      ? "A query starts at the entry point on the top layer, moves greedily towards the query, drops a layer, and repeats. On layer 0 it widens into a beam of <i>ef</i> candidates. Points are projected to 2-D with PCA, so distances on screen are only a rough guide."
+      : "IVF-PQ splits the space into lists around k-means centroids. A query opens only the lists whose centroids are nearest (<i>nprobe</i>) and scores the compressed vectors inside them. Points are projected to 2-D with PCA."}</p>
+    <div class="row" style="margin-top:12px">
+      <label class="f">Point ID<input type="number" id="gid" placeholder="random" style="width:150px"></label>
+      <label class="f">${hnsw ? "ef" : "nprobe"}<input type="number" id="gk" placeholder="${hnsw ? c.index.ef_search : c.index.nprobe}"></label>
+      <button class="go" id="trace">${hnsw ? "Trace a search" : "Show probed lists"}</button>
+    </div>
+    <div class="mapgrid"><div><svg class="map" id="map" viewBox="0 0 800 560" role="img" aria-label="2-D map of the index"></svg>
+      <div class="legend" id="legend"></div></div>
+      <div class="side"><div id="hopbox"></div><div id="gside"></div></div></div>`;
+  $("#trace").onclick = trace;
+  sideStructure().then(trace);
+}
+
+async function sideStructure() {
+  const s = await api(`/collections/${encodeURIComponent(state.cur)}/inspect`);
+  const side = $("#gside");
+  if (s.type === "hnsw") {
+    const max = s.nodes_per_layer[0] || 1;
+    const h = s.degree_histogram_layer0, hmax = Math.max(...h, 1);
+    side.innerHTML = `<h3>Nodes per layer</h3><div class="bars">${s.nodes_per_layer.map((n, i) => ({n, i})).reverse().map(({n, i}) =>
+      `<div class="bar"><span>Layer ${i}</span><div class="track"><div class="fill" style="width:${Math.max(1, 100 * Math.log1p(n) / Math.log1p(max))}%"></div></div><span class="c">${fmt(n)}</span></div>`).join("")}</div>
+      <h3>Links per node on layer 0</h3><div class="hist">${h.map((v, i) => `<div style="height:${100 * v / hmax}%" title="${fmt(v)} nodes with ${i} links"></div>`).join("")}</div>
+      <p class="note" style="font-size:13px;margin:0">0 to ${s.max_degree_layer0} links; the cap is 2M. Average ${fmt(s.stats.avg_degree_layer0, 1)}.</p>`;
+  } else if (s.type === "ivfpq") {
+    const sz = s.list_sizes, srt = [...sz].sort((a, b) => b - a), mx = Math.max(...sz, 1);
+    side.innerHTML = s.stats.trained ? `<h3>List sizes, largest first</h3><div class="hist">${srt.map(v => `<div style="height:${100 * v / mx}%"></div>`).join("")}</div>
+      <p class="note" style="font-size:13px">${fmt(s.nlist)} lists, ${fmt(s.stats.list_size_mean, 1)} points on average, largest ${fmt(s.stats.list_size_max)}.
+      Each point is stored as ${s.m} bytes of codes plus a 4-byte ID.</p>`
+      : `<p class="note">Not trained yet. Searches are exact until the index has enough points to train on.</p>`;
+  }
+}
+
+async function trace() {
+  const c = info(), hnsw = c.index.type === "hnsw";
+  const body = {sample: 1500};
+  const id = $("#gid").value, k = $("#gk").value;
+  if (id) body.query_id = +id; else body.random = true;
+  if (k) body[hnsw ? "ef" : "nprobe"] = +k;
+  const svg = $("#map"), btn = $("#trace");
+  btn.disabled = true;
+  try {
+    const t = await api(`/collections/${encodeURIComponent(state.cur)}/inspect/trace`, {method: "POST", body});
+    const all = [...t.sample_xy, t.query_xy, ...(t.centroids_xy || [])];
+    const xs = all.map(p => p[0]), ys = all.map(p => p[1]);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    const W = 800, H = 560, pad = 26;
+    const sx = v => pad + (W - 2 * pad) * (v - x0) / ((x1 - x0) || 1);
+    const sy = v => H - pad - (H - 2 * pad) * (v - y0) / ((y1 - y0) || 1);
+    let g = t.sample_xy.map(p => `<circle class="pt" cx="${sx(p[0])}" cy="${sy(p[1])}" r="1.7"/>`).join("");
+    const hb = $("#hopbox");
+    if (hnsw && t.hops) {
+      g += (t.expanded_xy || []).map(p => `<circle class="exp" cx="${sx(p[0])}" cy="${sy(p[1])}" r="2.6"/>`).join("");
+      g += (t.found || []).map(f => `<circle class="found" cx="${sx(f.xy[0])}" cy="${sy(f.xy[1])}" r="6"/>`).join("");
+      g += `<polyline class="path" points="${t.hops.map(h => `${sx(h.xy[0])},${sy(h.xy[1])}`).join(" ")}"/>`;
+      g += t.hops.map(h => `<circle class="hop" cx="${sx(h.xy[0])}" cy="${sy(h.xy[1])}" r="3.4"/>`).join("");
+      const e = t.hops[0];
+      g += `<text class="lbl" x="${sx(e.xy[0]) + 8}" y="${sy(e.xy[1]) - 8}">entry point, layer ${e.layer}</text>`;
+      $("#legend").innerHTML = `<span><i style="background:var(--brass)"></i>greedy path down the layers</span>
+        <span><i style="background:var(--brass-dim)"></i>expanded on layer 0</span>
+        <span><i style="border:1.4px solid var(--text)"></i>top 10 found</span>
+        <span><i style="background:var(--inlay);opacity:.5"></i>sample of all points</span>`;
+      const pct = 100 * t.visited / t.total;
+      const l2 = c.metric === "l2";
+      const shown = d => l2 ? Math.sqrt(Math.max(d, 0)) : -d;
+      hb.innerHTML = `<div class="stats" style="margin-top:0"><div class="stat"><div class="v">${fmt(t.visited)}</div>
+        <div class="l">of ${fmt(t.total)} graph nodes scored, ${fmt(pct, pct < 1 ? 2 : 1)}%</div></div></div>
+        <h3>Greedy hops, ${l2 ? "distance" : "similarity"} to the query</h3><ol class="hops" style="margin-bottom:22px">${t.hops.map((h, i) => {
+          const stay = i > 0 && t.hops[i - 1].slot === h.slot;
+          return `<li${stay ? ' style="color:var(--muted)"' : ""}><span>Layer ${h.layer}</span><span>${stay ? "stays at " : ""}point ${h.id}</span><span class="d">${fmt(shown(h.dist), 3)}</span></li>`;
+        }).join("")}</ol>`;
+    } else if (t.centroids_xy) {
+      const probes = new Set(t.probes);
+      g += t.centroids_xy.map((p, i) => {
+        const x = sx(p[0]), y = sy(p[1]), on = probes.has(i), r = on ? 4.5 : 3;
+        return `<rect class="${on ? "probe" : "cent"}" x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" transform="rotate(45 ${x} ${y})"/>`;
+      }).join("");
+      $("#legend").innerHTML = `<span><i style="background:var(--brass);border-radius:0"></i>probed list centroids</span>
+        <span><i style="border:1px solid var(--inlay);border-radius:0"></i>other centroids</span>
+        <span><i style="background:var(--inlay);opacity:.5"></i>sample of all points</span>`;
+      const scanned = t.probes.reduce((a, i) => a + t.list_sizes[i], 0), tot = t.list_sizes.reduce((a, b) => a + b, 0) || 1;
+      hb.innerHTML = `<div class="stats" style="margin-top:0"><div class="stat"><div class="v">${fmt(scanned)}</div>
+        <div class="l">of ${fmt(tot)} compressed points scored in ${t.probes.length} lists, ${fmt(100 * scanned / tot, 1)}%</div></div></div>`;
+    }
+    g += `<circle class="q" cx="${sx(t.query_xy[0])}" cy="${sy(t.query_xy[1])}" r="7"/>`;
+    g += `<text class="lbl" x="${sx(t.query_xy[0]) + 10}" y="${sy(t.query_xy[1]) + 4}">query${t.query_id != null ? ", point " + t.query_id : ""}</text>`;
+    svg.innerHTML = g;
+  } catch (e) { svg.innerHTML = `<text class="lbl" x="24" y="40">${esc(e.message)}</text>`; }
+  finally { btn.disabled = false; }
+}
+
+// --------------------------------------------------------------- points
+async function renderPoints(after = null) {
+  const el = $("#t-points");
+  try {
+    const r = await api(`/collections/${encodeURIComponent(state.cur)}/points?limit=50${after != null ? "&after=" + after : ""}`);
+    el.innerHTML = r.points.length ? `<div class="tablewrap"><table><thead><tr><th>ID</th><th>Payload</th></tr></thead><tbody>
+      ${r.points.map(p => `<tr><td>${p.id}</td><td class="payload" style="white-space:normal">${esc(JSON.stringify(p.payload))}</td></tr>`).join("")}
+      </tbody></table></div><div class="row" style="margin-top:14px">
+      ${after != null ? `<button class="quiet" id="first">First page</button>` : ""}
+      ${r.next != null ? `<button class="quiet" id="next">Next 50</button>` : ""}</div>`
+      : `<p class="note">This collection is empty. Add points with <code>PUT /collections/${esc(state.cur)}/points</code> or the Python client.</p>`;
+    $("#next")?.addEventListener("click", () => renderPoints(r.next));
+    $("#first")?.addEventListener("click", () => renderPoints(null));
+  } catch (e) { el.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+
+// ----------------------------------------------------------- durability
+function renderDurability() {
+  const c = info();
+  $("#t-durability").innerHTML = `
+    <p class="note">Every write is appended to the write-ahead log and flushed to disk before it is acknowledged.
+    A checkpoint makes the vector file, SQLite and the index durable, then empties the log.
+    On start-up, anything in the log after the last checkpoint is replayed.</p>
+    <div class="stats" style="margin-top:16px">
+      <div class="stat"><div class="v">${fmt(c.last_lsn)}</div><div class="l">last write, log sequence number</div></div>
+      <div class="stat"><div class="v">${fmt(c.checkpoint_lsn)}</div><div class="l">last checkpoint</div></div>
+      <div class="stat"><div class="v">${fmt(c.last_lsn - c.checkpoint_lsn)}</div><div class="l">writes only in the log</div></div>
+      <div class="stat"><div class="v">${bytes(c.wal_bytes)}</div><div class="l">log size</div></div>
+      <div class="stat"><div class="v">${fmt(c.recovered_records)}</div><div class="l">replayed when opened</div></div>
+    </div>
+    <div class="row"><button class="go" id="ckpt">Checkpoint now</button><span class="note" id="ckmsg"></span></div>`;
+  $("#ckpt").onclick = async () => {
+    try {
+      const r = await api(`/collections/${encodeURIComponent(state.cur)}/checkpoint`, {method: "POST"});
+      Object.assign(info(), r);
+      renderDurability();
+      $("#ckmsg").textContent = `Checkpointed in ${fmt(r.ms, 1)} ms. The log is empty.`;
+    } catch (e) { $("#ckmsg").textContent = e.message; }
+  };
+}
+
+// ----------------------------------------------------------- benchmarks
+const PALETTE = ["var(--brass)", "var(--inlay)", "#7fa7c9", "#b88fc9", "#8fb59a", "var(--oxide)"];
+async function renderBench() {
+  state.cur = null; state.tab = "bench";
+  $("#cols").querySelectorAll("button").forEach(b => b.setAttribute("aria-current", false));
+  const m = $("#main");
+  const r = await api("/benchmarks");
+  const files = r.benchmarks.filter(b => Array.isArray(b.results) && b.results.length && b.results[0].engine && b.results[0].qps != null);
+  if (!files.length) {
+    m.innerHTML = `<div class="empty"><h1>No benchmark results</h1><p class="note">Run
+      <code>python scripts/bench.py --synthetic 50000</code> (or with <code>--dataset</code>) from the project folder,
+      then start the server from there, or point it at the results with <code>--results</code>.</p></div>`;
+    return;
+  }
+  m.innerHTML = `<div class="head"><h1>Benchmarks</h1></div>
+    <div class="row" style="margin:14px 0 18px"><label class="f">Run<select id="bf">${files.map((f, i) =>
+      `<option value="${i}">${esc(f.dataset)}, ${esc(f.file)}</option>`).join("")}</select></label></div><div id="bout"></div>`;
+  const draw = () => {
+    const b = files[+$("#bf").value];
+    const engines = [...new Set(b.results.map(x => x.engine))];
+    const W = 860, H = 460, L = 70, R = 20, T = 20, B = 50;
+    const rec = b.results.map(x => x.recall), q = b.results.map(x => x.qps);
+    const rx0 = Math.min(...rec), rx1 = 1;
+    const lq0 = Math.floor(Math.log10(Math.min(...q))), lq1 = Math.ceil(Math.log10(Math.max(...q)));
+    const sx = v => L + (W - L - R) * (v - rx0) / ((rx1 - rx0) || 1);
+    const sy = v => H - B - (H - T - B) * (Math.log10(v) - lq0) / ((lq1 - lq0) || 1);
+    let g = "";
+    for (let e = lq0; e <= lq1; e++) g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${sy(10 ** e)}" y2="${sy(10 ** e)}"/><text class="ax" x="${L - 8}" y="${sy(10 ** e) + 4}" text-anchor="end">${fmt(10 ** e)}</text>`;
+    for (let i = 0; i <= 5; i++) { const v = rx0 + (rx1 - rx0) * i / 5; g += `<text class="ax" x="${sx(v)}" y="${H - B + 18}" text-anchor="middle">${v.toFixed(3)}</text>`; }
+    g += `<text class="ax" x="${(W + L) / 2}" y="${H - 10}" text-anchor="middle">recall@${b.k || 10}</text>`;
+    g += `<text class="ax" transform="translate(16 ${(H - B + T) / 2}) rotate(-90)" text-anchor="middle">queries per second, log scale</text>`;
+    engines.forEach((en, i) => {
+      const pts = b.results.filter(x => x.engine === en).sort((a, c) => a.recall - c.recall);
+      const col = PALETTE[i % PALETTE.length], ours = en.startsWith("vf");
+      g += `<polyline fill="none" stroke="${col}" stroke-width="${ours ? 2.4 : 1.6}" ${ours ? "" : 'stroke-dasharray="5 4"'} points="${pts.map(p => `${sx(p.recall)},${sy(p.qps)}`).join(" ")}"/>`;
+      g += pts.map(p => `<circle cx="${sx(p.recall)}" cy="${sy(p.qps)}" r="3.2" fill="${col}"><title>${en}, ${p.param ?? ""} ${p.value ?? ""}: recall ${p.recall.toFixed(4)}, ${fmt(p.qps)} QPS</title></circle>`).join("");
+    });
+    $("#bout").innerHTML = `<p class="note">${fmt(b.n)} vectors, ${b.dim} dimensions, ${esc(b.metric)}, ${fmt(b.queries)} queries;
+      ${esc(b.mode || "")}. ${b.qdrant_version ? "Qdrant " + esc(b.qdrant_version) + "." : ""}
+      Solid lines are VectorForge, dashed are the reference libraries. Up and to the right is better.</p>
+      <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Recall versus queries per second">${g}</svg>
+      <div class="legend">${engines.map((en, i) => `<span><i style="background:${PALETTE[i % PALETTE.length]}"></i>${esc(en)}</span>`).join("")}</div>
+      <div class="tablewrap" style="margin-top:18px"><table><thead><tr><th>Engine</th><th>Setting</th><th class="num">Recall</th><th class="num">QPS</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th class="num">Build s</th><th class="num">Index memory</th></tr></thead>
+      <tbody>${b.results.map(x => `<tr><td>${esc(x.engine)}</td><td>${esc(x.param ?? "")} ${x.value ?? ""}</td><td class="num">${x.recall.toFixed(4)}</td><td class="num">${fmt(x.qps)}</td>
+      <td class="num">${fmt(x.p50_ms, 3)}</td><td class="num">${fmt(x.p99_ms, 3)}</td><td class="num">${fmt(x.build_s, 1)}</td><td class="num">${bytes(x.index_bytes)}</td></tr>`).join("")}</tbody></table></div>`;
+  };
+  $("#bf").onchange = draw;
+  draw();
+}
+$("#benchLink").onclick = renderBench;
+
+// --------------------------------------------------------------- sample
+async function makeSample() {
+  const name = "sample";
+  const btn = $("#mk") || $("#sampleBtn");
+  const prev = btn.textContent; btn.textContent = "Creating..."; btn.disabled = true;
+  try {
+    if (state.cols.find(c => c.name === name)) { await loadCols(name); return; }
+    await api("/collections", {method: "POST", body: {name, dim: 32, metric: "l2", params: {M: 12}}});
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
+    const centers = Array.from({length: 40}, () => Array.from({length: 32}, () => gauss() * 3));
+    const langs = ["te", "en", "hi"];
+    for (let s = 0; s < 5000; s += 1000) {
+      const points = [];
+      for (let i = s; i < s + 1000; i++) {
+        const c = centers[Math.floor(rnd() * centers.length)];
+        points.push({id: i, vector: c.map(v => v + gauss()), payload: {bucket: i % 100, lang: langs[i % 3], year: 2020 + (i % 7)}});
+      }
+      await api(`/collections/${name}/points`, {method: "PUT", body: {points}});
+    }
+    await loadCols(name);
+  } catch (e) { $("#main").insertAdjacentHTML("afterbegin", `<p class="err">${esc(e.message)}</p>`); }
+  finally { btn.textContent = prev; btn.disabled = false; }
+}
+$("#sampleBtn").onclick = makeSample;
+
+(async () => {
+  try {
+    state.health = await api("/healthz");
+    $("#ver").textContent = `Version ${state.health.version}` + (state.health.embedder ? `, text search with ${state.health.embedder.name}` : "");
+    await loadCols();
+  } catch (e) { $("#main").innerHTML = `<p class="err">Can't reach the VectorForge API: ${esc(e.message)}. Is the server running?</p>`; }
+})();
+</script>
+</body>
+</html>
