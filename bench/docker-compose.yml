@@ -1,0 +1,12 @@
+# Qdrant server for scripts/bench.py. The harness records the server version
+# in the results file; pin a tag here once you have the numbers you publish.
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"   # HTTP
+      - "6334:6334"   # gRPC (--qdrant-grpc)
+    volumes:
+      - qdrant-bench:/qdrant/storage
+volumes:
+  qdrant-bench:
