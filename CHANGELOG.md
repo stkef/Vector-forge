@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Benchmark on real embeddings:** GloVe 6B-100d (399k vectors) against hnswlib and FAISS, as a re-runnable notebook (`notebooks/`) with results in `docs/bench-results/glove-6b-100/`.
+  - Same recall as the references.
+  - 0.33x to 0.45x their single-thread QPS.
+  - IVF-PQ index at 7.9% of raw size.
+
 ## 0.1.0 (2026-10-03)
 
 First release, milestones M1 to M6.

@@ -37,3 +37,31 @@ python scripts/bench_filtered.py --dataset datasets/sift-128-euclidean.hdf5 --li
 
 Each run writes `results/bench-<dataset>.json` (with machine details) and a
 `.png` chart; Studio's Benchmarks page draws the same data.
+
+## Results: GloVe 6B-100d (real word embeddings)
+
+- **Data:** 400,000 GloVe 6B 100-d word vectors (gensim `glove-wiki-gigaword-100`), cosine. 1,000 random words are held out as queries and the other 399,000 form the base. Ground truth comes from FAISS `IndexFlatIP` (exact).
+- **Run:** [`notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb`](../notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb), on 2 cores with one thread per engine. Qdrant is not included because a notebook has no Docker.
+- **Results:** [`bench-results/glove-6b-100/bench.json`](bench-results/glove-6b-100/bench.json) (with machine details) and `bench.csv`.
+
+| recall target | vf-hnsw | hnswlib | faiss-hnsw | vf-ivfpq | faiss-ivfpq |
+|---|---|---|---|---|---|
+| >= 0.80 | 3,808 | 11,705 | 11,192 | 1,877 | 5,853 |
+| >= 0.90 | 1,626 | 4,325 | 4,412 | 942 | 2,300 |
+| >= 0.95 | 666 | 1,968 | 1,717 | 539 | 1,186 |
+
+Best QPS (single thread) that reaches each recall@10 target. No engine reached 0.99 within ef <= 256 / nprobe <= 128.
+
+| | build (1 thread) | index size | max recall |
+|---|---|---|---|
+| vf-hnsw | 337 s | 76.8 MB | 0.963 |
+| hnswlib | 144 s | | 0.963 |
+| faiss-hnsw | 154 s | | 0.960 |
+| vf-ivfpq | 70 s | 12.1 MB | 0.957 |
+| faiss-ivfpq | 29 s | 12.6 MB | 0.957 |
+
+**What it says:**
+- **Recall matches.** VectorForge's recall at each setting matches the references within about 0.01, so the graph and the quantizer behave like theirs.
+- **The speed gap grows on real data.** It is 0.33x to 0.45x here, against 0.45x on synthetic data, because GloVe queries need many more hops.
+- **Fixed per-query cost dominates at low ef.** vf-hnsw is slightly slower at ef 10 than at ef 16, a sign that the Python call around each query is the floor.
+

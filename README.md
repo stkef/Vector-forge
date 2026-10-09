@@ -21,7 +21,8 @@ The engine is built only on NumPy, Numba and SQLite. No FAISS or hnswlib inside.
 | M4 | Payload filters, query planner, write-ahead log, checkpoints, crash recovery | done |
 | M5 | HTTP API, Python client, Studio, one benchmark harness for all engines | done |
 | M6 | LangChain vector store, semantic-search demo (`ingest` + Studio text search) | done |
-| Next | SIFT1M / GloVe runs with Qdrant in Docker; faster IVF-PQ scan and HNSW build | |
+| Bench | GloVe 6B (399k real word vectors) vs hnswlib and FAISS, as a reproducible notebook | done |
+| Next | SIFT1M and Qdrant-in-Docker runs; faster per-query path, IVF-PQ scan and HNSW build | |
 
 ## Quick start
 
@@ -96,6 +97,22 @@ runs are in.
 
 Details, methods and what went wrong along the way are in the
 component write-ups listed below.
+
+### On real embeddings: GloVe 6B, 399k words, 100-d, cosine
+
+Same rules: one thread, one query at a time, `M=16`, `ef_construction=200`; IVF-PQ with nlist 2526, m 25, re-rank 100. The run is a notebook you can re-execute: [`notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb`](notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb). Raw results are in [`docs/bench-results/glove-6b-100/`](docs/bench-results/glove-6b-100/).
+
+| | VectorForge | Reference | |
+|---|---|---|---|
+| HNSW recall@10 at ef 32 / 128 / 256 | 0.808 / 0.929 / 0.963 | hnswlib 0.809 / 0.930 / 0.963 | same recall |
+| HNSW QPS at recall >= 0.90 | 1,626 | hnswlib 4,325 · FAISS 4,412 | 0.37x |
+| IVF-PQ QPS at recall >= 0.90 | 942 | FAISS 2,300 | 0.41x |
+| IVF-PQ index size | 12.1 MB (7.9% of 152 MB raw) | FAISS 12.6 MB | |
+| HNSW build, 399k vectors, 1 thread | 337 s | hnswlib 144 s | 2.3x slower |
+
+![Recall vs QPS on GloVe 6B](docs/bench-results/glove-6b-100/recall_vs_qps.png)
+
+On real word vectors the gap to C++ is wider than on synthetic data (about 0.33x to 0.45x instead of 0.45x). Each query does more graph hops, so the Python per-query overhead and the scalar distance loops count for more. GloVe is also much harder: ef 32 reaches 0.81 recall here, against 0.999 on clustered synthetic data, for every engine.
 
 ## Documentation
 
