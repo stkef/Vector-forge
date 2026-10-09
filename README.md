@@ -112,6 +112,8 @@ Same rules: one thread, one query at a time, `M=16`, `ef_construction=200`; IVF-
 
 ![Recall vs QPS on GloVe 6B](docs/bench-results/glove-6b-100/recall_vs_qps.png)
 
+On Kaggle's CPU notebook (see [`bench-kaggle.csv`](docs/bench-results/glove-6b-100/bench-kaggle.csv)), the same run gives 0.48x hnswlib and 0.55x FAISS at recall >= 0.90, and 0.43x FAISS for IVF-PQ. Recall at each setting is identical to the run above.
+
 On real word vectors the gap to C++ is wider than on synthetic data (about 0.33x to 0.45x instead of 0.45x). Each query does more graph hops, so the Python per-query overhead and the scalar distance loops count for more. GloVe is also much harder: ef 32 reaches 0.81 recall here, against 0.999 on clustered synthetic data, for every engine.
 
 ## Documentation

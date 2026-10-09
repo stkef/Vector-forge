@@ -65,3 +65,13 @@ Best QPS (single thread) that reaches each recall@10 target. No engine reached 0
 - **The speed gap grows on real data.** It is 0.33x to 0.45x here, against 0.45x on synthetic data, because GloVe queries need many more hops.
 - **Fixed per-query cost dominates at low ef.** vf-hnsw is slightly slower at ef 10 than at ef 16, a sign that the Python call around each query is the floor.
 
+**The same notebook on Kaggle** (CPU notebook, results in [`bench-results/glove-6b-100/bench-kaggle.csv`](bench-results/glove-6b-100/bench-kaggle.csv)):
+
+| recall target | vf-hnsw | hnswlib | faiss-hnsw | vf-ivfpq | faiss-ivfpq |
+|---|---|---|---|---|---|
+| >= 0.80 | 3,248 | 8,426 | 6,889 | 1,212 | 2,825 |
+| >= 0.90 | 1,590 | 3,309 | 2,899 | 463 | 1,083 |
+| >= 0.95 | 725 | 1,509 | 1,237 | 263 | 624 |
+
+The recall at every setting matched the first run to three decimals. Speed ratios vary with the CPU: VectorForge ran at 0.39x to 0.59x of the C++ libraries on Kaggle, against 0.33x to 0.45x on the 2-core VM.
+
