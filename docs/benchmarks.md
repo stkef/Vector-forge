@@ -65,7 +65,7 @@ Best QPS (single thread) that reaches each recall@10 target. No engine reached 0
 - **The speed gap grows on real data.** It is 0.33x to 0.45x here, against 0.45x on synthetic data, because GloVe queries need many more hops.
 - **Fixed per-query cost dominates at low ef.** vf-hnsw is slightly slower at ef 10 than at ef 16, a sign that the Python call around each query is the floor.
 
-**The same notebook on Kaggle** (CPU notebook, results in [`bench-results/glove-6b-100/bench-kaggle.csv`](bench-results/glove-6b-100/bench-kaggle.csv)):
+**The same notebook on Kaggle** ([public notebook](https://www.kaggle.com/code/pradeep129009090/notebook94577fb008); CPU notebook, results in [`bench-results/glove-6b-100/bench-kaggle.csv`](bench-results/glove-6b-100/bench-kaggle.csv)):
 
 | recall target | vf-hnsw | hnswlib | faiss-hnsw | vf-ivfpq | faiss-ivfpq |
 |---|---|---|---|---|---|

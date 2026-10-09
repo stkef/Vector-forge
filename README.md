@@ -100,7 +100,7 @@ component write-ups listed below.
 
 ### On real embeddings: GloVe 6B, 399k words, 100-d, cosine
 
-Same rules: one thread, one query at a time, `M=16`, `ef_construction=200`; IVF-PQ with nlist 2526, m 25, re-rank 100. The run is a notebook you can re-execute: [`notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb`](notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb). Raw results are in [`docs/bench-results/glove-6b-100/`](docs/bench-results/glove-6b-100/).
+Same rules: one thread, one query at a time, `M=16`, `ef_construction=200`; IVF-PQ with nlist 2526, m 25, re-rank 100. The run is a notebook you can re-execute: [`notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb`](notebooks/vectorforge-vs-faiss-vs-hnswlib.ipynb), also **[published and run on Kaggle](https://www.kaggle.com/code/pradeep129009090/notebook94577fb008)**. Raw results are in [`docs/bench-results/glove-6b-100/`](docs/bench-results/glove-6b-100/).
 
 | | VectorForge | Reference | |
 |---|---|---|---|
